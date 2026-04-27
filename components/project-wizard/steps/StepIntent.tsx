@@ -36,6 +36,21 @@ export function StepIntent({ data, updateData }: StepIntentProps) {
         />
       </div>
 
+      {/* 1.5 PRIORITAS PROYEK */}
+      <div className="space-y-2.5">
+        <label className="text-sm font-bold text-foreground">Prioritas Proyek</label>
+        <select
+          className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          value={data.priority || "medium"}
+          onChange={(e) => updateData({ priority: e.target.value as any })}
+        >
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+          <option value="urgent">Urgent</option>
+        </select>
+      </div>
+
       {/* 2. LOKASI PROYEK (Dropdown Bertingkat) */}
       <div className="space-y-2.5">
         <label className="flex items-center gap-1.5 text-sm font-bold text-foreground">

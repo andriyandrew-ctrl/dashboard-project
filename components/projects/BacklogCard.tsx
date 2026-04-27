@@ -36,16 +36,7 @@ export function BacklogCard({ backlog }: BacklogCardProps) {
           <span className="font-semibold text-foreground">{backlog.priorityLabel}</span>
         </div>
 
-        {/* Kategori Label */}
-        <div className="flex items-center justify-between text-sm">
-          <span className="flex items-center gap-2 text-muted-foreground">
-            <Suitcase className="h-4 w-4" />
-            Kategori
-          </span>
-          <Badge variant="secondary" className="font-medium text-[11px] bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200">
-            {backlog.labelBadge}
-          </Badge>
-        </div>
+
 
         {/* PIC Utama */}
         <div className="flex items-center justify-between text-sm pt-2">

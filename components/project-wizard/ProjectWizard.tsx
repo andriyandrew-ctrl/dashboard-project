@@ -97,6 +97,7 @@ export function ProjectWizard({ onClose, onCreate, initialData, projectId }: Pro
               target_revenue: data.targetRevenue,
               pic_name: data.pic,
               client: data.client,
+              priority: data.priority,
               location: (data.city && data.province) ? `${data.city}, ${data.province}` : data.city || data.province || "",
               endDate: data.targetDeadline ? new Date(data.targetDeadline).toISOString() : undefined,
           });
@@ -112,7 +113,7 @@ export function ProjectWizard({ onClose, onCreate, initialData, projectId }: Pro
             pic_name: data.pic || "",
             client: data.client || "",
             location: (data.city && data.province) ? `${data.city}, ${data.province}` : data.city || data.province || "",
-            priority: "medium", 
+            priority: data.priority || "medium", 
             startDate: new Date().toISOString(),
             endDate: data.targetDeadline ? new Date(data.targetDeadline).toISOString() : new Date().toISOString(),
           });

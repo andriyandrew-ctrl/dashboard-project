@@ -23,6 +23,7 @@ export interface ProjectData {
   partner?: string;
   client?: string;
   structure?: StructureType;
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
 
   deliverables?: any[];
   metrics?: any[];

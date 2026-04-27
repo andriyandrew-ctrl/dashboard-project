@@ -35,12 +35,15 @@ export default function LoginPage() {
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none" />
 
       <div className="w-full max-w-[400px] bg-card border border-border shadow-2xl rounded-2xl p-8 relative z-10">
-        <div className="flex flex-col items-center mb-8">
+        <div className="flex flex-col items-center mb-8 text-center">
           <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4 border border-primary/20">
             <ChartBar className="h-7 w-7 text-primary" weight="bold" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">R&D Portal</h1>
-          <p className="text-sm text-muted-foreground mt-1">Masuk dengan akun korporat Anda</p>
+          <div className="mb-2 px-3 py-1 bg-primary/10 text-primary text-[10px] uppercase tracking-wider font-bold rounded-full border border-primary/20">
+            Internal Access Only
+          </div>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">Project Control Center</h1>
+          <p className="text-sm text-muted-foreground mt-1">Secure access for internal project operations</p>
         </div>
 
         {error && (
@@ -52,7 +55,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin} className="space-y-5">
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-foreground">Email Pribadi</label>
+            <label className="text-sm font-semibold text-foreground">Email</label>
             <div className="relative">
               <EnvelopeSimple className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <input
@@ -67,7 +70,7 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-foreground">Kata Sandi</label>
+            <label className="text-sm font-semibold text-foreground">Password</label>
             <div className="relative">
               <LockKey className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <input
@@ -89,27 +92,27 @@ export default function LoginPage() {
             {loading ? (
               <>
                 <CircleNotch className="h-5 w-5 animate-spin" weight="bold" />
-                <span>Memverifikasi...</span>
+                <span>Verifying...</span>
               </>
             ) : (
-              "Masuk ke Dashboard"
+              "Sign In to System"
             )}
           </button>
         </form>
 
         <div className="mt-4 text-center">
           <p className="text-xs text-muted-foreground font-medium">
-            Belum punya akun?{" "}
+            Don’t have an account?{" "}
             <Link href="/register" className="text-primary hover:underline font-bold relative z-50 px-2 py-1">
-              Daftar di sini
+              Register here
             </Link>
           </p>
         </div>
 
         <div className="mt-8 pt-6 border-t border-border/50 text-center">
-          <p className="text-[11px] text-muted-foreground font-medium">
-            Sistem Informasi Khusus Manajerial & Tim R&D.<br />
-            Akses tidak sah akan dilacak.
+          <p className="text-[11px] text-muted-foreground font-medium leading-relaxed">
+            Execute, Monitor, and Collaborate in One Secure Hub.<br />
+            Authorized access only. All activities are monitored.
           </p>
         </div>
       </div>

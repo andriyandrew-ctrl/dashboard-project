@@ -78,8 +78,22 @@ export function NotesTab({ notes, currentUser = defaultUser }: NotesTabProps) {
 
     const handleAddNote = () => setIsCreateModalOpen(true)
 
-    // 2. CREATE NOTE KE SUPABASE
+    // 2. CREATE NOTE KE SUPABASE (Optimistic)
     const handleCreateNote = async (title: string, content: string, noteType: string) => {
+        const tempId = `temp-${Date.now()}`;
+        const optimisticNote: ProjectNote = {
+            id: tempId,
+            title,
+            content,
+            noteType: noteType as any,
+            status: 'open',
+            addedDate: new Date(),
+            addedBy: { id: currentUser.id, name: currentUser.name }
+        };
+
+        setLocalNotes((prev) => [optimisticNote, ...prev]);
+        setIsCreateModalOpen(false);
+
         try {
             const newNotePayload = {
                 project_id: projectDbId,
@@ -93,22 +107,13 @@ export function NotesTab({ notes, currentUser = defaultUser }: NotesTabProps) {
             const { data, error } = await supabase.from('project_notes').insert([newNotePayload]).select().single();
             if (error) throw error;
 
-            const newDocument: ProjectNote = {
-                id: data.id,
-                title: data.title,
-                content: data.content,
-                noteType: data.note_type as any,
-                status: data.status as any,
-                addedDate: new Date(data.created_at),
-                // PERBAIKAN TYPESCRIPT: Menambahkan 'id' menggunakan currentUser
-                addedBy: { id: currentUser.id, name: data.added_by }
-            };
-
-            setLocalNotes((prevNotes) => [newDocument, ...prevNotes]);
-            toast.success("Dokumen berhasil ditambahkan!");
+            // Update with real ID
+            setLocalNotes((prev) => prev.map(n => n.id === tempId ? { ...n, id: data.id } : n));
+            toast.success("Catatan berhasil ditambahkan!");
             router.refresh();
         } catch (error: any) {
-            toast.error(`Gagal menyimpan dokumen: ${error.message}`);
+            toast.error(`Gagal menyimpan: ${error.message}`);
+            setLocalNotes((prev) => prev.filter(n => n.id !== tempId)); // Rollback
         }
     }
 
@@ -144,18 +149,21 @@ export function NotesTab({ notes, currentUser = defaultUser }: NotesTabProps) {
     const confirmDeleteNote = async () => {
         if (!noteToDelete) return;
         
-        setIsDeleting(true);
+        // Optimistic Delete
+        const originalNotes = [...localNotes];
+        setLocalNotes((prev) => prev.filter(n => n.id !== noteToDelete));
+        setIsDeleteModalOpen(false);
+
         try {
             const { error } = await supabase.from('project_notes').delete().eq('id', noteToDelete);
             if (error) throw error;
             
-            setLocalNotes((prevNotes) => prevNotes.filter((n) => n.id !== noteToDelete));
             toast.success("Dokumen berhasil dihapus.");
-            setIsDeleteModalOpen(false);
             setNoteToDelete(null);
             router.refresh();
         } catch (error: any) {
-            toast.error(`Gagal menghapus dokumen: ${error.message}`);
+            toast.error(`Gagal menghapus: ${error.message}`);
+            setLocalNotes(originalNotes); // Rollback
         } finally {
             setIsDeleting(false);
         }

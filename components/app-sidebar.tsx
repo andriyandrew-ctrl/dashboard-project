@@ -75,9 +75,9 @@ export function AppSidebar({ user }: { user?: { name?: string | null, email?: st
               <ChartPieSlice className="h-5 w-5" weight="fill" />
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="text-sm font-semibold truncate">R&D Portal</span>
+              <span className="text-sm font-semibold truncate">Project Control Center</span>
               <span className="text-xs text-muted-foreground truncate">
-                Manajerial Dashboard
+                Executive Dashboard
               </span>
             </div>
           </div>

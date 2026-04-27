@@ -1,5 +1,6 @@
 import { AppSidebar } from "@/components/app-sidebar"
 import { ProjectDetailsPage } from "@/components/projects/ProjectDetailsPage"
+import { createClient } from "@/lib/supabase/server"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { notFound } from "next/navigation"
 
@@ -13,6 +14,19 @@ type PageProps = {
 export default async function Page({ params }: PageProps) {
   const { id } = await params
 
+  const supabase = await createClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  
+  const mappedUser = session?.user ? {
+    name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || "User",
+    email: session.user.email || "No email",
+    avatar: "",
+  } : {
+    name: "User",
+    email: "No email",
+    avatar: "",
+  }
+
   // 1. TARIK DATA ASLI DARI SUPABASE BERDASARKAN ID
   const projectData = await getProjectById(id)
 
@@ -23,7 +37,7 @@ export default async function Page({ params }: PageProps) {
 
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar user={mappedUser} />
       <SidebarInset>
         {/* 2. LEMPAR DATA ASLI (projectData) KE KOMPONEN UI BAPAK */}
         <ProjectDetailsPage projectId={id} dbData={projectData} />

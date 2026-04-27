@@ -29,8 +29,8 @@ function statusConfig(status: Project["status"]) {
       }
     case "todo": 
       return {
-        label: "To Do", 
-        dot: "bg-zinc-900 dark:bg-zinc-200", // Warna titik abu gelap
+        label: "Planned", 
+        dot: "bg-zinc-900 dark:bg-zinc-200", 
         pill: "text-zinc-900 border-zinc-200 bg-zinc-50 dark:text-zinc-50 dark:border-zinc-600/60 dark:bg-zinc-600/20",
       }
     case "backlog":
@@ -76,22 +76,22 @@ export function ProjectCard({ project, actions, variant = "list" }: ProjectCardP
 
   // 3. MENAMBAHKAN TEKS "Partner: " DI BAWAH JUDUL
   const secondaryLine = (() => {
-    const a = project.client ? `Partner: ${project.client}` : null
+    // Menampilkan Client & Partner
+    // (Misal nama client dari field client, bisa juga digabung dengan field tags)
+    const clientStr = project.client;
+    const tagStr = project.tags && project.tags.length > 0 ? project.tags[0] : null;
     
-    // Tampilkan Partner, atau jika tidak ada partner, tampilkan Tags
-    if (a) {
-      return a
-    }
-    if (project.tags && project.tags.length > 0) {
-      return project.tags.join(" • ")
-    }
-    return ""
+    if (clientStr && tagStr) return `${clientStr} • ${tagStr}`;
+    if (clientStr) return clientStr;
+    if (tagStr) return tagStr;
+    return "";
   })()
 
   const dueLabel = (() => {
     if (!dueDate) return "No target"
     try {
-      return format(new Date(dueDate), "MMM d")
+      // Mengubah format target date menjadi tanggal bulan tahun (contoh: 15 April 2026)
+      return format(new Date(dueDate), "dd MMMM yyyy")
     } catch {
       return dueDate
     }

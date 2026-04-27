@@ -30,11 +30,7 @@ type ProjectTasksTabProps = {
   project: any // Diubah menjadi any untuk mempermudah mapping custom dbId
 }
 
-const DUMMY_USERS: User[] = [
-  { id: "11111111-1111-1111-1111-111111111111", name: "Ivan Engineer", avatarUrl: undefined },
-  { id: "22222222-2222-2222-2222-222222222222", name: "Shafa QA", avatarUrl: undefined },
-  { id: "33333333-3333-3333-3333-333333333333", name: "Andri Setyawan", avatarUrl: undefined },
-]
+
 
 export function ProjectTasksTab({ project }: ProjectTasksTabProps) {
   // Mapping ulang tasks dari array workstreams agar rata
@@ -48,8 +44,8 @@ export function ProjectTasksTab({ project }: ProjectTasksTabProps) {
   
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [newTaskName, setNewTaskName] = useState("")
-  const [newTaskPhase, setNewTaskPhase] = useState("Engineering")
-  const [newTaskPIC, setNewTaskPIC] = useState("unassigned")
+  const [newTaskPhase, setNewTaskPhase] = useState("Planning & Coordination")
+  const [newTaskPIC, setNewTaskPIC] = useState("")
   const [newTaskStartDate, setNewTaskStartDate] = useState(new Date().toISOString().split('T')[0])
   const [newTaskEndDate, setNewTaskEndDate] = useState(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -91,15 +87,19 @@ export function ProjectTasksTab({ project }: ProjectTasksTabProps) {
   const confirmDeleteTask = async () => {
     if (!taskToDelete) return;
     
-    setIsSubmitting(true);
+    // Optimistic Delete
+    const originalTasks = [...tasks];
+    setTasks((prev) => prev.filter(t => t.id !== taskToDelete));
+    setIsDeleteModalOpen(false);
+
     try {
       await deleteTaskInDB(taskToDelete, project.dbId);
       toast.success("Pekerjaan berhasil dihapus.");
-      setIsDeleteModalOpen(false);
       setTaskToDelete(null);
       router.refresh();
     } catch (error) {
       toast.error("Gagal menghapus pekerjaan.");
+      setTasks(originalTasks); // Rollback
     } finally {
       setIsSubmitting(false);
     }
@@ -124,29 +124,48 @@ export function ProjectTasksTab({ project }: ProjectTasksTabProps) {
         return
     }
 
-    setIsSubmitting(true);
+    const formatPICName = (name: string) => {
+      return name.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+    }
+    const finalPIC = newTaskPIC.trim() ? formatPICName(newTaskPIC.trim()) : "Unassigned";
+
+    // 1. Optimistic Update (Tambah ke UI dulu)
+    const tempId = `temp-${Date.now()}`;
+    const optimisticTask = {
+      id: tempId,
+      name: newTaskName,
+      phase: newTaskPhase,
+      status: "todo",
+      assignee_id: finalPIC,
+      start_date: newTaskStartDate,
+      end_date: newTaskEndDate,
+      project_id: project.dbId,
+      workstreamName: newTaskPhase
+    };
+
+    setTasks((prev) => [...prev, optimisticTask]);
+    setIsModalOpen(false);
+    setNewTaskName("");
+
     try {
-      await createTaskInDB({
+      const savedTask = await createTaskInDB({
         project_id: project.dbId, 
         name: newTaskName,
         phase: newTaskPhase,
-        assignee_id: newTaskPIC,
+        assignee_id: finalPIC,
         start_date: newTaskStartDate,
         end_date: newTaskEndDate,
       });
 
-      toast.success("Pekerjaan baru berhasil ditambahkan ke Database!")
-      setIsModalOpen(false)
-      setNewTaskName("");
-      // Reset dates to default for next entry
-      setNewTaskStartDate(new Date().toISOString().split('T')[0]);
-      setNewTaskEndDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
-      
-      // REFRESH HALAMAN AGAR GANTT CHART & TAB LAIN MENDAPATKAN DATA BARU
+      // Update ID asli dari DB
+      setTasks((prev) => prev.map(t => t.id === tempId ? { ...t, id: savedTask.id } : t));
+      toast.success("Pekerjaan baru berhasil ditambahkan!");
       router.refresh();
 
     } catch (error: any) {
-      toast.error(`Gagal menyimpan: ${error.message || "Periksa koneksi database"}`);
+      toast.error(`Gagal menyimpan: ${error.message}`);
+      // Rollback jika gagal
+      setTasks((prev) => prev.filter(t => t.id !== tempId));
     } finally {
       setIsSubmitting(false);
     }
@@ -214,27 +233,23 @@ export function ProjectTasksTab({ project }: ProjectTasksTabProps) {
                         <Input placeholder="Contoh: Desain Plat Baja 4mm" value={newTaskName} onChange={(e) => setNewTaskName(e.target.value)} disabled={isSubmitting} className="bg-background" autoFocus />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-xs font-semibold text-muted-foreground uppercase">Fase Pekerjaan</label>
+                        <label className="text-xs font-semibold text-muted-foreground uppercase">Kategori Pekerjaan</label>
                         <Select value={newTaskPhase} onValueChange={setNewTaskPhase} disabled={isSubmitting}>
-                            <SelectTrigger className="bg-background"><SelectValue placeholder="Pilih fase..." /></SelectTrigger>
-                            {/* PERBAIKAN: Memaksa Dropdown List memiliki z-index 9999 agar selalu di paling depan */}
+                            <SelectTrigger className="bg-background"><SelectValue placeholder="Pilih kategori..." /></SelectTrigger>
                             <SelectContent className="z-[9999]">
-                                <SelectItem value="Engineering">Engineering (Desain/Riset)</SelectItem>
-                                <SelectItem value="Procurement">Procurement (Pengadaan)</SelectItem>
-                                <SelectItem value="Construction">Construction (Pabrikasi/Eksekusi)</SelectItem>
+                                <SelectItem value="Planning & Coordination">Planning & Coordination</SelectItem>
+                                <SelectItem value="Research & Data Collection">Research & Data Collection</SelectItem>
+                                <SelectItem value="Business Development">Business Development</SelectItem>
+                                <SelectItem value="Documentation & Administration">Documentation & Administration</SelectItem>
+                                <SelectItem value="Execution / Implementation">Execution / Implementation</SelectItem>
+                                <SelectItem value="Review & Reporting">Review & Reporting</SelectItem>
+                                <SelectItem value="Support Task">Support Task</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
                     <div className="space-y-2">
                         <label className="text-xs font-semibold text-muted-foreground uppercase">Tugaskan Ke (PIC)</label>
-                        <Select value={newTaskPIC} onValueChange={setNewTaskPIC} disabled={isSubmitting}>
-                            <SelectTrigger className="bg-background"><SelectValue placeholder="Pilih PIC..." /></SelectTrigger>
-                            {/* PERBAIKAN: Sama seperti Fase, Dropdown PIC ini juga di-set di paling depan */}
-                            <SelectContent className="z-[9999]">
-                                <SelectItem value="unassigned">Belum Ditugaskan</SelectItem>
-                                {DUMMY_USERS.map(u => (<SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>))}
-                            </SelectContent>
-                        </Select>
+                        <Input placeholder="Contoh: Ivan Engineer" value={newTaskPIC} onChange={(e) => setNewTaskPIC(e.target.value)} disabled={isSubmitting} className="bg-background" />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -342,7 +357,9 @@ function TaskRowDnD({ task, onToggle, onDelete }: { task: ProjectTask, onToggle:
         <div className="w-[24px] flex justify-end">
           {task.assignee ? (
             <Avatar className="size-6 border border-background shadow-sm" title={task.assignee.name}>
-              <AvatarFallback className="text-[9px] bg-primary/10 text-primary font-bold">{task.assignee.name.charAt(0).toUpperCase()}</AvatarFallback>
+              <AvatarFallback className="text-[9px] bg-primary/10 text-primary font-bold">
+                {task.assignee.name.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()}
+              </AvatarFallback>
             </Avatar>
           ) : (
             <div className="size-6 rounded-full border border-dashed border-border/70 flex items-center justify-center bg-muted/30" title="Unassigned">

@@ -40,12 +40,12 @@ export default function RegisterPage() {
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none" />
 
       <div className="w-full max-w-[440px] bg-card border border-border shadow-2xl rounded-2xl p-8 relative z-10">
-        <div className="flex flex-col items-center mb-8">
+        <div className="flex flex-col items-center mb-8 text-center">
           <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4 border border-primary/20">
             <ChartBar className="h-7 w-7 text-primary" weight="bold" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tight">Daftar Akun Baru</h1>
-          <p className="text-sm text-muted-foreground mt-1">Bergabung dengan tim R&D Portal</p>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">Create New Account</h1>
+          <p className="text-sm text-muted-foreground mt-1">Join the Project Control Center Team</p>
         </div>
 
         {error && (
@@ -57,7 +57,7 @@ export default function RegisterPage() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-foreground">Nama Lengkap</label>
+            <label className="text-sm font-semibold text-foreground">Full Name</label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <input
@@ -71,7 +71,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-foreground">Email Perusahaan</label>
+            <label className="text-sm font-semibold text-foreground">Email</label>
             <div className="relative">
               <EnvelopeSimple className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <input
@@ -85,14 +85,14 @@ export default function RegisterPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-foreground">Kata Sandi</label>
+            <label className="text-sm font-semibold text-foreground">Password</label>
             <div className="relative">
               <LockKey className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <input
                 name="password"
                 type="password"
                 required
-                placeholder="••••••••"
+                placeholder="Enter your password"
                 className="w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
               />
             </div>
@@ -106,24 +106,27 @@ export default function RegisterPage() {
             {loading ? (
               <>
                 <CircleNotch className="h-5 w-5 animate-spin" weight="bold" />
-                <span>Memproses...</span>
+                <span>Processing...</span>
               </>
             ) : (
-              "Buat Akun Sekarang"
+              "Create Account"
             )}
           </button>
         </form>
 
         <div className="mt-8 pt-6 border-t border-border/50 text-center flex flex-col gap-3">
           <p className="text-xs text-muted-foreground font-medium">
-            Sudah punya akun?{" "}
+            Already have an account?{" "}
             <Link href="/login" className="text-primary hover:underline font-bold relative z-50 px-2 py-1">
-              Login di sini
+              Sign in here
             </Link>
           </p>
-          <Link href="/login" className="text-xs text-muted-foreground hover:text-foreground flex items-center justify-center gap-1 transition-colors relative z-50 py-1">
-            <ArrowLeft className="h-3 w-3" /> Kembali ke Login
-          </Link>
+          <div className="mt-2 text-center">
+            <p className="text-[11px] text-muted-foreground font-medium leading-relaxed">
+              Execute, Monitor, and Collaborate in One Secure Hub.<br />
+              Authorized access only. All activities are monitored.
+            </p>
+          </div>
         </div>
       </div>
     </div>

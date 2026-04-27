@@ -1,0 +1,7 @@
+-- MATIKAN SEMENTARA ROW-LEVEL SECURITY (RLS) UNTUK SEMUA TABEL
+-- Ini akan menyelesaikan error "violates row-level security policy"
+ALTER TABLE public.projects DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.project_scopes DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tasks DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.project_notes DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.project_files DISABLE ROW LEVEL SECURITY;

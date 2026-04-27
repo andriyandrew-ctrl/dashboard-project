@@ -12,7 +12,6 @@ import { TimelineGantt } from "@/components/projects/TimelineGantt"
 import { RightMetaPanel } from "@/components/projects/RightMetaPanel"
 import { WorkstreamTab } from "@/components/projects/WorkstreamTab"
 import { ProjectTasksTab } from "@/components/projects/ProjectTasksTab"
-import { NotesTab } from "@/components/projects/NotesTab"
 import { AssetsFilesTab } from "@/components/projects/AssetsFilesTab"
 import { ProjectWizard } from "@/components/project-wizard/ProjectWizard"
 import { SidebarTrigger } from "@/components/ui/sidebar"
@@ -73,7 +72,7 @@ export function ProjectDetailsPage({ projectId, dbData }: { projectId: string, d
   const workstreamMap: Record<string, any[]> = {};
   rawTasks.forEach((t: any) => {
     if (!workstreamMap[t.phase]) workstreamMap[t.phase] = [];
-    const picName = t.assignee_id === 'u1' ? 'Ivan Engineer' : t.assignee_id === 'u2' ? 'Shafa QA' : t.assignee_id === 'u3' ? 'Andri Setyawan' : t.assignee_id;
+    const picName = t.assignee_id && t.assignee_id !== 'unassigned' ? t.assignee_id : "Unassigned";
     workstreamMap[t.phase].push({
       id: t.id, name: t.name, status: t.status, priority: t.priority,
       dueLabel: t.end_date ? formatTanggal(t.end_date) : "-", dueTone: "neutral",
@@ -98,6 +97,15 @@ export function ProjectDetailsPage({ projectId, dbData }: { projectId: string, d
     date: f.created_at ? new Date(f.created_at).toLocaleDateString('id-ID') : "-"
   }));
 
+  const getSprintLabel = () => {
+    if (rawTasks.length === 0) return "New";
+    const completedTasks = rawTasks.filter((t: any) => t.status === 'done');
+    if (completedTasks.length > 0) {
+      return completedTasks[completedTasks.length - 1].phase || "Completed";
+    }
+    return "New";
+  };
+
   const project = {
     id: dbData?.project_code || projectId,
     dbId: dbData?.id || projectId,
@@ -108,14 +116,15 @@ export function ProjectDetailsPage({ projectId, dbData }: { projectId: string, d
     meta: {
       priorityLabel: dbData?.priority ? dbData.priority.charAt(0).toUpperCase() + dbData.priority.slice(1) : "Medium",
       locationLabel: dbData?.location || "Lokasi belum diatur",
-      sprintLabel: "Fase Eksekusi",
+      sprintLabel: getSprintLabel(),
       lastSyncLabel: "Just now",
     },
     backlog: {
       totalTasks: rawTasks.length,
       completedTasks: rawTasks.filter((t:any) => t.status === 'done').length,
       picUsers: [{ id: dbData?.pic_name ? dbData.pic_name.toLowerCase().replace(/\s+/g, "-") : "unassigned", name: dbData?.pic_name || "Belum ditugaskan" }],
-      supportUsers: []
+      supportUsers: [],
+      priorityLabel: dbData?.priority ? dbData.priority.charAt(0).toUpperCase() + dbData.priority.slice(1) : "Medium",
     },
     time: calculateTime(),
     source: { client: dbData?.client || "" },
@@ -203,14 +212,13 @@ export function ProjectDetailsPage({ projectId, dbData }: { projectId: string, d
                     <TabsTrigger value="overview" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 data-[state=active]:shadow-none font-medium">Overview</TabsTrigger>
                     <TabsTrigger value="workstream" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 data-[state=active]:shadow-none font-medium">Workstream</TabsTrigger>
                     <TabsTrigger value="tasks" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 data-[state=active]:shadow-none font-medium">Tasks</TabsTrigger>
-                    <TabsTrigger value="notes" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 data-[state=active]:shadow-none font-medium">Notes</TabsTrigger>
                     <TabsTrigger value="assets" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 data-[state=active]:shadow-none font-medium">Assets & Files</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="overview" className="pt-4 outline-none">
                     <div className="space-y-7">
                       <section>
-                        <div className="flex items-center gap-2 mb-3 text-primary"><Target className="h-5 w-5" weight="fill" /><h3 className="text-lg font-semibold text-foreground tracking-tight">Tujuan Proyek</h3></div>
+                        <div className="flex items-center gap-2 mb-3 text-primary"><Target className="h-5 w-5" weight="fill" /><h3 className="text-lg font-semibold text-foreground tracking-tight">Detail Proyek</h3></div>
                         <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm hover:shadow-md transition-shadow duration-300">
                           <div className="flex items-center gap-2 mb-3"><Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/40 dark:text-blue-300 px-3 py-1 text-xs">{project.targets.intentLabel}</Badge></div>
                           <p className="text-[15px] leading-relaxed text-muted-foreground whitespace-pre-wrap">{project.description}</p>
@@ -222,7 +230,6 @@ export function ProjectDetailsPage({ projectId, dbData }: { projectId: string, d
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="group rounded-2xl border border-border/60 bg-card p-5 flex flex-col justify-center relative overflow-hidden shadow-sm hover:border-primary/30 transition-colors"><div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity duration-300"><Factory className="h-32 w-32" weight="fill" /></div><span className="flex items-center gap-1.5 text-xs text-muted-foreground font-bold mb-1.5 uppercase tracking-wider relative z-10"><Factory className="h-4 w-4" /> Target Produksi</span><span className="text-2xl font-bold text-foreground relative z-10 tracking-tight">{project.targets.targetProduksi}</span></div>
                           <div className="group rounded-2xl border border-border/60 bg-card p-5 flex flex-col justify-center relative overflow-hidden shadow-sm hover:border-primary/30 transition-colors"><div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity duration-300"><Coins className="h-32 w-32" weight="fill" /></div><span className="flex items-center gap-1.5 text-xs text-muted-foreground font-bold mb-1.5 uppercase tracking-wider relative z-10"><Coins className="h-4 w-4" /> Target Revenue</span><span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 relative z-10 tracking-tight">{project.targets.targetRevenue}</span></div>
-                          <div className="rounded-2xl border border-border/60 bg-card p-5 md:col-span-2 shadow-sm hover:shadow-md transition-shadow duration-300"><span className="text-xs text-muted-foreground font-bold mb-2 uppercase tracking-wider block">Deskripsi KPI</span><p className="text-[15px] leading-relaxed text-foreground">{project.targets.kpiDescription}</p></div>
                         </div>
                       </section>
 
@@ -252,7 +259,6 @@ export function ProjectDetailsPage({ projectId, dbData }: { projectId: string, d
 
                   <TabsContent value="workstream" className="pt-6 outline-none"><WorkstreamTab workstreams={project.workstreams as any} /></TabsContent>
                   <TabsContent value="tasks" className="pt-6 outline-none"><ProjectTasksTab project={project as any} /></TabsContent>
-                  <TabsContent value="notes" className="pt-6 outline-none"><NotesTab notes={project.notes as any} /></TabsContent>
 
                   {/* TAB ASSETS & FILES DIUPDATE UNTUK MENERIMA PROJECT ID */}
                   <TabsContent value="assets" className="pt-6 outline-none">

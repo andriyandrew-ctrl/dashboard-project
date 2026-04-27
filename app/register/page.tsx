@@ -24,8 +24,8 @@ export default function RegisterPage() {
 
     try {
       await signUpWithEmail(email, password, name)
-      toast.success("Akun berhasil dibuat! Silakan cek email atau langsung login.")
-      router.push("/login")
+      toast.success("Akun berhasil dibuat! Mengalihkan ke dasbor...")
+      router.push("/")
     } catch (err: any) {
       setError(err.message || "Terjadi kesalahan")
       toast.error(err.message || "Gagal membuat akun")

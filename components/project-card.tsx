@@ -72,7 +72,7 @@ export function ProjectCard({ project, actions, variant = "list" }: ProjectCardP
   const draggingRef = useRef(false)
   const startPosRef = useRef<{ x: number; y: number } | null>(null)
 
-  const initials = assignee ? assignee.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase() : null
+  const initials = assignee ? assignee.split(" ").map((p: string) => p[0]).join("").slice(0, 2).toUpperCase() : null
 
   // 3. MENAMBAHKAN TEKS "Partner: " DI BAWAH JUDUL
   const secondaryLine = (() => {

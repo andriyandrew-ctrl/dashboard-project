@@ -14,9 +14,11 @@ export interface DBProject {
   priority: ProjectPriority;
   pic_name: string | null;
   client: string | null;
+  partner: string | null;
   tags: string[] | null;
   start_date: string | null;
   end_date: string | null;
+  location: string | null;
   progress_percent: number;
   created_at: string;
   updated_at: string;

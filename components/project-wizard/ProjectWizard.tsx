@@ -41,6 +41,7 @@ export function ProjectWizard({ onClose, onCreate, initialData, projectId }: Pro
     stakeholderIds: initialData?.stakeholderIds || [],
     addStarterTasks: initialData?.addStarterTasks || false,
     pic: initialData?.pic || '',
+    partner: initialData?.partner || '',
     client: initialData?.client || '',
     targetProduksi: initialData?.targetProduksi || '',
     targetRevenue: initialData?.targetRevenue || '',
@@ -97,6 +98,7 @@ export function ProjectWizard({ onClose, onCreate, initialData, projectId }: Pro
               target_revenue: data.targetRevenue,
               pic_name: data.pic,
               client: data.client,
+              partner: data.partner,
               priority: data.priority,
               location: (data.city && data.province) ? `${data.city}, ${data.province}` : data.city || data.province || "",
               endDate: data.targetDeadline ? new Date(data.targetDeadline).toISOString() : undefined,
@@ -104,7 +106,6 @@ export function ProjectWizard({ onClose, onCreate, initialData, projectId }: Pro
       } else {
           savedProject = await createProjectInDB({
             name: data.name || "Untitled Project",
-            location: (data.city && data.province) ? `${data.city}, ${data.province}` : "",
             description: data.description || "",
             intent: formattedIntent,
             structure_type: formattedStructure,
@@ -112,8 +113,9 @@ export function ProjectWizard({ onClose, onCreate, initialData, projectId }: Pro
             target_revenue: data.targetRevenue || "",
             pic_name: data.pic || "",
             client: data.client || "",
+            partner: data.partner || "",
             location: (data.city && data.province) ? `${data.city}, ${data.province}` : data.city || data.province || "",
-            priority: data.priority || "medium", 
+            priority: data.priority || "medium",
             startDate: new Date().toISOString(),
             endDate: data.targetDeadline ? new Date(data.targetDeadline).toISOString() : new Date().toISOString(),
           });

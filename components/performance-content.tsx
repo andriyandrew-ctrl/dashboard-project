@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { cn } from "@/lib/utils"
+import { cn, formatTargetProduksi } from "@/lib/utils"
 
 // IMPORT DATABASE PIPELINE (Gantikan data dummy)
 import { getAllProjects, getProjectById } from "@/lib/data/project-actions"
@@ -308,7 +308,7 @@ export function PerformanceContent() {
             isFavorable: issuesTrend <= 0 
         } 
       },
-      { title: "Output Capacity", value: totalTargetProduksi, description: "Estimated target delivery", tooltip: "Target komitmen kapasitas produksi.", icon: <Target className="h-5 w-5" weight="fill" />, tone: "neutral", trend: { value: "0%", label: "capacity stable", direction: "neutral", isFavorable: true } },
+      { title: "Output Capacity", value: formatTargetProduksi(totalTargetProduksi), description: "Estimated target delivery", tooltip: "Target komitmen kapasitas produksi.", icon: <Target className="h-5 w-5" weight="fill" />, tone: "neutral", trend: { value: "0%", label: "capacity stable", direction: "neutral", isFavorable: true } },
     ] as const
 
     const operationalKpis = [

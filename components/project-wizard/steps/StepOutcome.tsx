@@ -1,5 +1,5 @@
 import { CheckCircle, Package, ChartLineUp, Question } from "@phosphor-icons/react/dist/ssr";
-import { cn } from "@/lib/utils";
+import { cn, formatTargetProduksi, formatTargetRevenue } from "@/lib/utils";
 import type { ProjectData } from "../types";
 
 type StepOutcomeProps = {
@@ -13,6 +13,13 @@ export function StepOutcome({ data, updateData }: StepOutcomeProps) {
     { id: "kpi", title: "Berbasis KPI", description: "Peningkatan Kinerja (Efisiensi 20%).", icon: ChartLineUp },
     { id: "undefined", title: "Belum Ditentukan", description: "Ditentukan kemudian.", icon: Question },
   ] as const;
+
+  // Helper untuk input hanya angka
+  const handleNumericChange = (val: string, field: 'targetProduksi' | 'targetRevenue') => {
+    // Hanya ambil angka
+    const numericValue = val.replace(/[^0-9]/g, "");
+    updateData({ [field]: numericValue });
+  };
 
   return (
     <div className="space-y-6">
@@ -47,13 +54,40 @@ export function StepOutcome({ data, updateData }: StepOutcomeProps) {
         </div>
         <div className="space-y-2">
           <label className="text-sm font-bold text-foreground">Target Produksi <span className="font-normal text-muted-foreground">(Opsional)</span></label>
-          <input type="text" placeholder="150 Ton/Bulan" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary" value={data.targetProduksi || ""} onChange={(e) => updateData({ targetProduksi: e.target.value })} />
+          <div className="relative">
+            <input 
+              type="text" 
+              placeholder="Contoh: 150000" 
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary" 
+              value={data.targetProduksi || ""} 
+              onChange={(e) => handleNumericChange(e.target.value, 'targetProduksi')} 
+            />
+            {data.targetProduksi && (
+              <div className="mt-1 text-[10px] font-bold text-primary px-1 uppercase tracking-tighter">
+                Hasil: {formatTargetProduksi(data.targetProduksi)}
+              </div>
+            )}
+          </div>
         </div>
         <div className="space-y-2">
           <label className="text-sm font-bold text-foreground">Target Revenue <span className="font-normal text-muted-foreground">(Opsional)</span></label>
-          <input type="text" placeholder="Rp 5 Miliar" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary" value={data.targetRevenue || ""} onChange={(e) => updateData({ targetRevenue: e.target.value })} />
+          <div className="relative">
+            <input 
+              type="text" 
+              placeholder="Contoh: 15" 
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary" 
+              value={data.targetRevenue || ""} 
+              onChange={(e) => handleNumericChange(e.target.value, 'targetRevenue')} 
+            />
+            {data.targetRevenue && (
+              <div className="mt-1 text-[10px] font-bold text-emerald-600 px-1 uppercase tracking-tighter">
+                Hasil: {formatTargetRevenue(data.targetRevenue)}
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
 
       {/* SCOPE OF WORK (BARU) */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 pt-2 border-t border-border/50 pt-4">

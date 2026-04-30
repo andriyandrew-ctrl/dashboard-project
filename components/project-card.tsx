@@ -79,11 +79,11 @@ export function ProjectCard({ project, actions, variant = "list" }: ProjectCardP
     // Menampilkan Client & Partner
     // (Misal nama client dari field client, bisa juga digabung dengan field tags)
     const clientStr = project.client;
-    const tagStr = project.tags && project.tags.length > 0 ? project.tags[0] : null;
+    const partnerStr = project.partner;
     
-    if (clientStr && tagStr) return `${clientStr} • ${tagStr}`;
+    if (clientStr && partnerStr) return `${clientStr} • ${partnerStr}`;
     if (clientStr) return clientStr;
-    if (tagStr) return tagStr;
+    if (partnerStr) return partnerStr;
     return "";
   })()
 
@@ -91,7 +91,7 @@ export function ProjectCard({ project, actions, variant = "list" }: ProjectCardP
     if (!dueDate) return "No target"
     try {
       // Mengubah format target date menjadi tanggal bulan tahun (contoh: 15 April 2026)
-      return format(new Date(dueDate), "dd MMMM yyyy")
+      return format(new Date(dueDate), "MMM dd, yyyy")
     } catch {
       return dueDate
     }
@@ -190,12 +190,14 @@ export function ProjectCard({ project, actions, variant = "list" }: ProjectCardP
         </div>
 
         {!isBoard && (
-          <div className="mt-2 flex items-center justify-between text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <CalendarBlank className="h-4 w-4" />
-              <span>{dueLabel}</span>
+          <div className="mt-2 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5 min-w-0 shrink">
+              <CalendarBlank className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate whitespace-nowrap">{dueLabel}</span>
             </div>
-            <PriorityBadge level={project.priority} appearance="inline" />
+            <div className="shrink-0">
+              <PriorityBadge level={project.priority} appearance="inline" />
+            </div>
           </div>
         )}
 

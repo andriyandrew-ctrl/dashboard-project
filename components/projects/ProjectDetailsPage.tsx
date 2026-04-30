@@ -1,5 +1,6 @@
 "use client"
 
+import { cn, formatTargetProduksi, formatTargetRevenue } from "@/lib/utils"
 import { useCallback, useState } from "react"
 import { LinkSimple, SquareHalf } from "@phosphor-icons/react/dist/ssr"
 import { toast } from "sonner"
@@ -127,7 +128,7 @@ export function ProjectDetailsPage({ projectId, dbData }: { projectId: string, d
       priorityLabel: dbData?.priority ? dbData.priority.charAt(0).toUpperCase() + dbData.priority.slice(1) : "Medium",
     },
     time: calculateTime(),
-    source: { client: dbData?.client || "" },
+    source: { client: dbData?.client || "", partner: dbData?.partner || "" },
     targets: {
       intentLabel: dbData?.intent || "Eksekusi Proyek",
       targetProduksi: dbData?.target_produksi || "-",
@@ -228,8 +229,8 @@ export function ProjectDetailsPage({ projectId, dbData }: { projectId: string, d
                       <section>
                         <div className="flex items-center gap-2 mb-3 text-primary"><ChartLineUp className="h-5 w-5" weight="fill" /><h3 className="text-lg font-semibold text-foreground tracking-tight">Target & Indikator</h3></div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="group rounded-2xl border border-border/60 bg-card p-5 flex flex-col justify-center relative overflow-hidden shadow-sm hover:border-primary/30 transition-colors"><div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity duration-300"><Factory className="h-32 w-32" weight="fill" /></div><span className="flex items-center gap-1.5 text-xs text-muted-foreground font-bold mb-1.5 uppercase tracking-wider relative z-10"><Factory className="h-4 w-4" /> Target Produksi</span><span className="text-2xl font-bold text-foreground relative z-10 tracking-tight">{project.targets.targetProduksi}</span></div>
-                          <div className="group rounded-2xl border border-border/60 bg-card p-5 flex flex-col justify-center relative overflow-hidden shadow-sm hover:border-primary/30 transition-colors"><div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity duration-300"><Coins className="h-32 w-32" weight="fill" /></div><span className="flex items-center gap-1.5 text-xs text-muted-foreground font-bold mb-1.5 uppercase tracking-wider relative z-10"><Coins className="h-4 w-4" /> Target Revenue</span><span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 relative z-10 tracking-tight">{project.targets.targetRevenue}</span></div>
+                          <div className="group rounded-2xl border border-border/60 bg-card p-5 flex flex-col justify-center relative overflow-hidden shadow-sm hover:border-primary/30 transition-colors"><div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity duration-300"><Factory className="h-32 w-32" weight="fill" /></div><span className="flex items-center gap-1.5 text-xs text-muted-foreground font-bold mb-1.5 uppercase tracking-wider relative z-10"><Factory className="h-4 w-4" /> Target Produksi</span><span className="text-2xl font-bold text-foreground relative z-10 tracking-tight">{formatTargetProduksi(project.targets.targetProduksi)}</span></div>
+                          <div className="group rounded-2xl border border-border/60 bg-card p-5 flex flex-col justify-center relative overflow-hidden shadow-sm hover:border-primary/30 transition-colors"><div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity duration-300"><Coins className="h-32 w-32" weight="fill" /></div><span className="flex items-center gap-1.5 text-xs text-muted-foreground font-bold mb-1.5 uppercase tracking-wider relative z-10"><Coins className="h-4 w-4" /> Target Revenue</span><span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 relative z-10 tracking-tight">{formatTargetRevenue(project.targets.targetRevenue)}</span></div>
                         </div>
                       </section>
 

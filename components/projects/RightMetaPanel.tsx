@@ -7,6 +7,7 @@ import { QuickLinksCard } from "@/components/projects/QuickLinksCard"
 import { Separator } from "@/components/ui/separator"
 import { ClientCard } from "@/components/projects/ClientCard"
 import { getClientByName } from "@/lib/data/clients"
+import { Handshake } from "@phosphor-icons/react/dist/ssr"
 
 type RightMetaPanelProps = {
   project: ProjectDetails
@@ -33,6 +34,19 @@ export function RightMetaPanel({ project }: RightMetaPanelProps) {
         <>
           <Separator className="bg-border/60" />
           <ClientCard client={client} />
+        </>
+      )}
+
+      {project.source?.partner && (
+        <>
+          <Separator className="bg-border/60" />
+          <div className="rounded-lg border border-border bg-card/80 p-4 space-y-3">
+             <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-medium text-muted-foreground">Partner</p>
+                <Handshake className="h-4 w-4 text-orange-500" weight="fill" />
+             </div>
+             <p className="text-sm font-medium text-foreground">{project.source.partner}</p>
+          </div>
         </>
       )}
       

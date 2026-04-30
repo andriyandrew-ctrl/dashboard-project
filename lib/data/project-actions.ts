@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from '@/lib/supabase/server'
-import { DBProject, DBTask, DBNote, DBFile, DBScope } from '@/lib/types/database'
+import { DBProject } from '@/lib/types/database'
 
 // Definisi Interface untuk Proyek Baru
 export interface NewProjectData {
@@ -14,6 +14,7 @@ export interface NewProjectData {
   target_revenue?: string;
   pic_name?: string;
   client?: string;
+  partner?: string;
   tags?: string[];
   startDate?: string;
   endDate?: string;
@@ -38,6 +39,7 @@ export async function createProjectInDB(projectData: NewProjectData) {
     priority: projectData.priority || 'medium',
     pic_name: projectData.pic_name || 'Andri Setyawan',
     client: projectData.client || '',
+    partner: projectData.partner || '',
     tags: projectData.tags || [],
     location: projectData.location || '',
     start_date: projectData.startDate,
@@ -293,6 +295,8 @@ export async function updateProjectInDB(projectId: string, projectData: Partial<
     target_revenue: projectData.target_revenue,
     pic_name: projectData.pic_name,
     client: projectData.client,
+    partner: projectData.partner,
+    priority: projectData.priority,
     tags: projectData.tags,
     location: projectData.location,
     start_date: projectData.startDate,

@@ -1,10 +1,11 @@
-import { useState } from "react"
-import { addDays, differenceInDays, format, isWithinInterval, startOfWeek } from "date-fns"
+import { useState, useRef, useEffect } from "react"
+import { addDays, differenceInDays, format, isWithinInterval, startOfWeek, startOfMonth, getDaysInMonth } from "date-fns"
 
 import type { TimelineTask } from "@/lib/data/project-details"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { CaretLeft, CaretRight, CalendarBlank, MagnifyingGlass } from "@phosphor-icons/react/dist/ssr"
+import { Input } from "@/components/ui/input"
 
 type TimelineGanttProps = {
   tasks: TimelineTask[]
@@ -16,6 +17,16 @@ function clamp(n: number, min: number, max: number) {
 
 export function TimelineGantt({ tasks }: TimelineGanttProps) {
   const [rangeStart, setRangeStart] = useState<Date | null>(null)
+  const [viewMode, setViewMode] = useState<"week" | "month">("week")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [showSearch, setShowSearch] = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (showSearch && searchInputRef.current) {
+      searchInputRef.current.focus()
+    }
+  }, [showSearch])
 
   // KONDISI 1: JIKA TIDAK ADA JADWAL (Judul dihapus, kotak disesuaikan)
   if (tasks.length === 0) {
@@ -41,8 +52,9 @@ export function TimelineGantt({ tasks }: TimelineGanttProps) {
   }
 
   const days = (() => {
-    const start = startOfWeek(effectiveRangeStart, { weekStartsOn: 1 })
-    return Array.from({ length: 7 }).map((_, i) => addDays(start, i))
+    const start = viewMode === "week" ? startOfWeek(effectiveRangeStart, { weekStartsOn: 1 }) : startOfMonth(effectiveRangeStart)
+    const length = viewMode === "week" ? 7 : getDaysInMonth(start)
+    return Array.from({ length }).map((_, i) => addDays(start, i))
   })()
 
   const monthLabel = format(days[0], "MMMM yyyy")
@@ -56,16 +68,16 @@ export function TimelineGantt({ tasks }: TimelineGanttProps) {
   const handlePrevious = () => {
     setRangeStart((prev) => {
       const base = prev ?? minWeekStart
-      const nextWeek = addDays(base, -7)
-      return clampToRange(nextWeek)
+      const nextDate = viewMode === "week" ? addDays(base, -7) : addDays(base, -getDaysInMonth(addDays(startOfMonth(base), -1)))
+      return clampToRange(nextDate)
     })
   }
 
   const handleNext = () => {
     setRangeStart((prev) => {
       const base = prev ?? minWeekStart
-      const nextWeek = addDays(base, 7)
-      return clampToRange(nextWeek)
+      const nextDate = viewMode === "week" ? addDays(base, 7) : addDays(base, getDaysInMonth(startOfMonth(base)))
+      return clampToRange(nextDate)
     })
   }
 
@@ -77,10 +89,11 @@ export function TimelineGantt({ tasks }: TimelineGanttProps) {
   const rangeStartDate = days[0]
   const rangeEndDate = addDays(days[days.length - 1], 1)
 
-  const hasTasksInRange = tasks.some((t) => t.startDate < rangeEndDate && t.endDate >= rangeStartDate)
+  const filteredTasks = tasks.filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  const hasTasksInRange = filteredTasks.some((t) => t.startDate < rangeEndDate && t.endDate >= rangeStartDate)
 
-  const canGoPrevious = currentWeekStart.getTime() > minWeekStart.getTime()
-  const canGoNext = currentWeekStart.getTime() < maxWeekStart.getTime()
+  const canGoPrevious = viewMode === "week" ? currentWeekStart.getTime() > minWeekStart.getTime() : startOfMonth(effectiveRangeStart).getTime() > startOfMonth(minDate).getTime()
+  const canGoNext = viewMode === "week" ? currentWeekStart.getTime() < maxWeekStart.getTime() : startOfMonth(effectiveRangeStart).getTime() < startOfMonth(maxDate).getTime()
 
   // KONDISI 2: JIKA ADA JADWAL (Header dihapus, margin atas dihilangkan)
   return (
@@ -121,19 +134,52 @@ export function TimelineGantt({ tasks }: TimelineGanttProps) {
                   <CaretRight className="h-4 w-4" />
                 </Button>
                 <Button
-                  variant="outline"
+                  variant={viewMode === "week" ? "default" : "outline"}
                   size="sm"
                   aria-label="Range: week"
+                  onClick={() => setViewMode("week")}
                   className="h-7 rounded-lg px-3 text-xs"
                 >
                   Minggu
                 </Button>
-                <Button variant="ghost" size="icon-sm" aria-label="Date range">
-                  <CalendarBlank className="h-4 w-4" />
+                <Button
+                  variant={viewMode === "month" ? "default" : "outline"}
+                  size="sm"
+                  aria-label="Range: month"
+                  onClick={() => setViewMode("month")}
+                  className="h-7 rounded-lg px-3 text-xs"
+                >
+                  Bulan
                 </Button>
-                <Button variant="ghost" size="icon-sm" aria-label="Search tasks">
-                  <MagnifyingGlass className="h-4 w-4" />
-                </Button>
+                <div className="relative">
+                  <Button variant="ghost" size="icon-sm" aria-label="Date range" className="cursor-pointer" asChild>
+                    <label>
+                      <CalendarBlank className="h-4 w-4" />
+                      <input 
+                        type="date" 
+                        className="absolute inset-0 opacity-0 cursor-pointer" 
+                        onChange={(e) => {
+                          if (e.target.value) setRangeStart(new Date(e.target.value))
+                        }}
+                      />
+                    </label>
+                  </Button>
+                </div>
+                <div className="relative flex items-center">
+                  <Button variant="ghost" size="icon-sm" aria-label="Search tasks" onClick={() => setShowSearch(!showSearch)}>
+                    <MagnifyingGlass className="h-4 w-4" />
+                  </Button>
+                  {showSearch && (
+                    <Input 
+                      ref={searchInputRef}
+                      type="text" 
+                      placeholder="Cari task..." 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="absolute right-0 top-full mt-1 w-48 h-8 text-xs z-50 bg-background" 
+                    />
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -171,7 +217,7 @@ export function TimelineGantt({ tasks }: TimelineGanttProps) {
             </div>
           )}
 
-          {tasks.map((t, rowIdx) => {
+          {filteredTasks.map((t, rowIdx) => {
             const startOffset = differenceInDays(t.startDate, days[0])
             const endOffset = differenceInDays(t.endDate, days[0])
 
@@ -200,7 +246,7 @@ export function TimelineGantt({ tasks }: TimelineGanttProps) {
                     <span className="text-[11px] font-medium text-primary-foreground dark:text-primary truncate">{t.name}</span>
                   </div>
                 </div>
-                {rowIdx < tasks.length - 1 ? <Separator className="col-span-2" /> : null}
+                {rowIdx < filteredTasks.length - 1 ? <Separator className="col-span-2" /> : null}
               </div>
             )
           })}

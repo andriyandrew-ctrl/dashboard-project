@@ -24,7 +24,7 @@ export function BacklogCard({ backlog }: BacklogCardProps) {
             <Hash className="h-4 w-4" />
             Divisi
           </span>
-          <span className="font-semibold text-foreground">R&D Dept.</span>
+          <span className="font-semibold text-foreground">Market Dev. Prod. Downstream Dept.</span>
         </div>
 
         {/* Prioritas */}

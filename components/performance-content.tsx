@@ -144,13 +144,13 @@ export function PerformanceContent() {
 
           rawTasks.forEach((t: any) => {
             if (!workstreamMap[t.phase]) workstreamMap[t.phase] = [];
-            const picName = t.assignee_id === 'u1' ? 'Ivan Engineer' : t.assignee_id === 'u2' ? 'Shafa QA' : t.assignee_id === 'u3' ? 'Andri Setyawan' : (t.assignee_id || 'Assigned');
+            const picName = t.assignee_id && t.assignee_id.toLowerCase() !== 'unassigned' && t.assignee_id.toLowerCase() !== 'assigned' ? t.assignee_id : null;
             
             workstreamMap[t.phase].push({
               id: t.id,
               status: t.status,
               endDate: t.end_date,
-              assignee: { name: picName, avatarUrl: "" }
+              assignee: picName ? { name: picName, avatarUrl: "" } : null
             });
           });
 

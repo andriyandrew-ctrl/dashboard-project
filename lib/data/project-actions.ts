@@ -158,6 +158,37 @@ export async function createTaskInDB(taskData: {
 }
 
 /**
+ * Memperbarui Task / Pekerjaan di Database
+ */
+export async function updateTaskInDB(taskId: string, taskData: {
+  name: string;
+  phase: string;
+  assignee_id?: string;
+  start_date?: string;
+  end_date?: string;
+}) {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('tasks')
+    .update({
+      name: taskData.name,
+      phase: taskData.phase,
+      assignee_id: taskData.assignee_id !== 'unassigned' ? taskData.assignee_id : null,
+      start_date: taskData.start_date,
+      end_date: taskData.end_date,
+    })
+    .eq('id', taskId)
+    .select()
+
+  if (error) {
+    console.error("Gagal memperbarui task:", error.message)
+    throw new Error(`Database Error: ${error.message}`)
+  }
+
+  return data[0]
+}
+
+/**
  * Menyimpan Catatan Baru ke Database
  */
 export async function createNoteInDB(noteData: {

@@ -1,28 +1,24 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { DotsSixVertical, Plus, ListChecks, CheckCircle, PlayCircle, CircleDashed, Clock, X, Spinner } from "@phosphor-icons/react/dist/ssr"
+import { DotsSixVertical, Plus, ListChecks, CheckCircle, PlayCircle, CircleDashed, Clock, X, Spinner, PencilSimpleLine } from "@phosphor-icons/react/dist/ssr"
 import { DndContext, type DragEndEvent, closestCenter } from "@dnd-kit/core"
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { toast } from "sonner"
 
 import type { ProjectDetails, ProjectTask, User } from "@/lib/data/project-details"
-import type { FilterCounts } from "@/lib/data/projects"
-import type { FilterChip as FilterChipType } from "@/lib/view-options"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
-import { FilterPopover } from "@/components/filter-popover"
-import { ChipOverflow } from "@/components/chip-overflow"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
 
 // IMPORT PIPA DATABASE KITA
-import { createTaskInDB, updateTaskStatusInDB, deleteTaskInDB } from "@/lib/data/project-actions"
+import { createTaskInDB, updateTaskStatusInDB, deleteTaskInDB, updateTaskInDB } from "@/lib/data/project-actions"
 import { Trash } from "@phosphor-icons/react/dist/ssr"
 import { DeleteConfirmModal } from "@/components/DeleteConfirmModal"
 
@@ -40,9 +36,8 @@ export function ProjectTasksTab({ project }: ProjectTasksTabProps) {
   };
 
   const [tasks, setTasks] = useState<any[]>(getTasks())
-  const [filters, setFilters] = useState<FilterChipType[]>([])
-  
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
   const [newTaskName, setNewTaskName] = useState("")
   const [newTaskPhase, setNewTaskPhase] = useState("Planning & Coordination")
   const [newTaskPIC, setNewTaskPIC] = useState("")
@@ -58,9 +53,6 @@ export function ProjectTasksTab({ project }: ProjectTasksTabProps) {
   useEffect(() => {
     setTasks(getTasks())
   }, [project])
-
-  const counts = useMemo<FilterCounts>(() => computeTaskFilterCounts(tasks), [tasks])
-  const filteredTasks = useMemo(() => filterTasksByChips(tasks, filters), [tasks, filters])
 
   const toggleTask = async (taskId: string, currentStatus: string) => {
     const newStatus = currentStatus === "done" ? "todo" : "done";
@@ -116,6 +108,16 @@ export function ProjectTasksTab({ project }: ProjectTasksTabProps) {
     }
   }
 
+  const handleEditTask = (task: any) => {
+    setEditingTaskId(task.id)
+    setNewTaskName(task.name)
+    setNewTaskPhase(task.phase || task.workstreamName || "Planning & Coordination")
+    setNewTaskPIC(task.assignee?.name || task.assignee_id || "")
+    setNewTaskStartDate(task.start_date || task.startDate || new Date().toISOString().split('T')[0])
+    setNewTaskEndDate(task.end_date || task.endDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+    setIsModalOpen(true)
+  }
+
   // FUNGSI UTAMA: MENGIRIM DATA TASK KE SUPABASE
   const handleSubmitNewTask = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -128,6 +130,43 @@ export function ProjectTasksTab({ project }: ProjectTasksTabProps) {
       return name.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
     }
     const finalPIC = newTaskPIC.trim() ? formatPICName(newTaskPIC.trim()) : "Unassigned";
+
+    setIsSubmitting(true);
+
+    if (editingTaskId) {
+      const updatedTask = {
+        ...tasks.find(t => t.id === editingTaskId),
+        name: newTaskName,
+        phase: newTaskPhase,
+        assignee_id: finalPIC,
+        start_date: newTaskStartDate,
+        end_date: newTaskEndDate,
+        workstreamName: newTaskPhase,
+        assignee: { name: finalPIC, avatarUrl: "" }
+      };
+
+      setTasks((prev) => prev.map((t) => t.id === editingTaskId ? updatedTask : t));
+      setIsModalOpen(false);
+      setEditingTaskId(null);
+      setNewTaskName("");
+
+      try {
+        await updateTaskInDB(editingTaskId, {
+          name: newTaskName,
+          phase: newTaskPhase,
+          assignee_id: finalPIC,
+          start_date: newTaskStartDate,
+          end_date: newTaskEndDate,
+        });
+        toast.success("Pekerjaan berhasil diperbarui!");
+        router.refresh();
+      } catch (error: any) {
+        toast.error(`Gagal memperbarui: ${error.message}`);
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
 
     // 1. Optimistic Update (Tambah ke UI dulu)
     const tempId = `temp-${Date.now()}`;
@@ -181,11 +220,8 @@ export function ProjectTasksTab({ project }: ProjectTasksTabProps) {
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <FilterPopover initialChips={filters} onApply={setFilters} onClear={() => setFilters([])} counts={counts} />
-          <ChipOverflow chips={filters} onRemove={(key, value) => setFilters((prev) => prev.filter((chip) => !(chip.key === key && chip.value === value)))} maxVisible={3} />
-          <Separator orientation="vertical" className="h-5 mx-1 hidden sm:block" />
           <Button variant="outline" size="sm" className="h-8 rounded-lg border-border/60 bg-background px-3 text-xs font-medium shadow-sm hover:bg-muted">View</Button>
-          <Button size="sm" className="h-8 rounded-lg px-3 text-xs font-medium shadow-sm" onClick={() => setIsModalOpen(true)}>
+          <Button size="sm" className="h-8 rounded-lg px-3 text-xs font-medium shadow-sm" onClick={() => { setEditingTaskId(null); setNewTaskName(""); setNewTaskPhase("Planning & Coordination"); setNewTaskPIC(""); setIsModalOpen(true); }}>
             <Plus className="mr-1.5 h-4 w-4" weight="bold" /> New Task
           </Button>
         </div>
@@ -205,10 +241,10 @@ export function ProjectTasksTab({ project }: ProjectTasksTabProps) {
         <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
             <div className="flex flex-col">
             <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext items={filteredTasks.map((task) => task.id)} strategy={verticalListSortingStrategy}>
-                {filteredTasks.map((task, index) => (
+                <SortableContext items={tasks.map((task) => task.id)} strategy={verticalListSortingStrategy}>
+                {tasks.map((task, index) => (
                     <div key={task.id} className={cn("border-b border-border/50 last:border-0 transition-colors hover:bg-muted/30", index % 2 === 0 ? "bg-background" : "bg-muted/5")}>
-                    <TaskRowDnD task={task as any} onToggle={() => toggleTask(task.id, task.status)} onDelete={() => handleDeleteTask(task.id)} />
+                    <TaskRowDnD task={task as any} onToggle={() => toggleTask(task.id, task.status)} onEdit={() => handleEditTask(task)} onDelete={() => handleDeleteTask(task.id)} />
                     </div>
                 ))}
                 </SortableContext>
@@ -222,8 +258,8 @@ export function ProjectTasksTab({ project }: ProjectTasksTabProps) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <div className="w-full max-w-md bg-card rounded-xl shadow-xl border border-border flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 <div className="flex items-center justify-between px-5 py-4 border-b border-border/60 bg-muted/20">
-                    <h3 className="text-base font-bold text-foreground">Tambah Pekerjaan Baru</h3>
-                    <button onClick={() => setIsModalOpen(false)} disabled={isSubmitting} className="text-muted-foreground hover:text-foreground disabled:opacity-50">
+                    <h3 className="text-base font-bold text-foreground">{editingTaskId ? "Edit Pekerjaan" : "Tambah Pekerjaan Baru"}</h3>
+                    <button type="button" onClick={() => setIsModalOpen(false)} disabled={isSubmitting} className="text-muted-foreground hover:text-foreground disabled:opacity-50">
                         <X className="h-5 w-5" weight="bold" />
                     </button>
                 </div>
@@ -301,31 +337,7 @@ function TaskStatus({ status }: { status: string }) {
   }
 }
 
-function filterTasksByChips(tasks: any[], chips: FilterChipType[]): any[] {
-  if (!chips.length) return tasks
-  const memberValues = chips.filter((chip) => chip.key.toLowerCase().startsWith("member") || chip.key.toLowerCase() === "pic").map((chip) => chip.value.toLowerCase())
-  if (!memberValues.length) return tasks
-  return tasks.filter((task) => {
-    const name = task.assignee?.name.toLowerCase() ?? ""
-    for (const value of memberValues) {
-      if (value === "no member" && !task.assignee) return true
-      if (value === "current member" && task.assignee) return true
-      if (value && name.includes(value)) return true
-    }
-    return false
-  })
-}
-
-function computeTaskFilterCounts(tasks: any[]): FilterCounts {
-  const counts: FilterCounts = { "member-no-member": 0, "member-current": 0, "member-jason": 0 }
-  for (const task of tasks) {
-    if (!task.assignee) counts["member-no-member"] = (counts["member-no-member"] || 0) + 1
-    else counts["member-current"] = (counts["member-current"] || 0) + 1
-  }
-  return counts
-}
-
-function TaskRowDnD({ task, onToggle, onDelete }: { task: ProjectTask, onToggle: () => void, onDelete: () => void }) {
+function TaskRowDnD({ task, onToggle, onEdit, onDelete }: { task: ProjectTask | any, onToggle: () => void, onEdit: () => void, onDelete: () => void }) {
   const isDone = task.status === "done"
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id })
   const style = { transform: CSS.Transform.toString(transform), transition }
@@ -367,6 +379,9 @@ function TaskRowDnD({ task, onToggle, onDelete }: { task: ProjectTask, onToggle:
             </div>
           )}
         </div>
+        <Button type="button" size="icon-sm" variant="ghost" className="h-6 w-6 rounded-md text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-muted" onClick={onEdit}>
+          <PencilSimpleLine className="h-4 w-4" />
+        </Button>
         <Button type="button" size="icon-sm" variant="ghost" className="h-6 w-6 rounded-md text-destructive opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10" onClick={onDelete}>
           <Trash className="h-4 w-4" />
         </Button>

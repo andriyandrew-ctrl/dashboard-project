@@ -226,16 +226,22 @@ export function PerformanceContent() {
 
         p.notes.forEach((n: any) => { allNotes.push({ ...n, projectName: p.name }) })
 
-        const projectPIC = p.dbData?.pic_name && p.dbData.pic_name.toLowerCase() !== "unassigned" ? p.dbData.pic_name : null;
+        const projectPICRaw = p.dbData?.pic_name && p.dbData.pic_name.toLowerCase() !== "unassigned" ? p.dbData.pic_name : null;
+        let projectPICs: string[] = [];
+        if (projectPICRaw) {
+            projectPICs = projectPICRaw.split(/[|,]/).map((n: string) => n.trim()).filter((n: string) => n.length > 0);
+        }
 
         p.workstreams.forEach((ws: any) => {
             ws.tasks.forEach((t: any) => {
                 if (t.status === "done") { completedTasksCount++ } 
                 else if (t.endDate && isBefore(startOfDay(new Date(t.endDate)), todayStart)) { overdueTasksCount++ }
                 
-                if (t.status !== "done" && projectPIC) {
-                    const existing = resourceMap.get(projectPIC) || { count: 0, avatar: "" }
-                    resourceMap.set(projectPIC, { count: existing.count + 1, avatar: "" })
+                if (t.status !== "done" && projectPICs.length > 0) {
+                    projectPICs.forEach(pic => {
+                        const existing = resourceMap.get(pic) || { count: 0, avatar: "" }
+                        resourceMap.set(pic, { count: existing.count + 1, avatar: "" })
+                    });
                 }
             })
         })
@@ -373,7 +379,7 @@ export function PerformanceContent() {
 
     const resourceWorkload = Array.from(resourceMap.entries())
         .map(([name, data]) => ({ name, count: data.count, avatar: data.avatar }))
-        .sort((a, b) => b.count - a.count).slice(0, 5)
+        .sort((a, b) => b.count - a.count)
 
     const criticalIssues = openIssues.slice(0, 5)
 
@@ -514,9 +520,9 @@ export function PerformanceContent() {
                             <Users className="h-5 w-5" weight="fill" />
                             <CardTitle className="text-base font-bold text-foreground">Team Utilization</CardTitle>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1">Top 5 by active workload</p>
+                        <p className="text-xs text-muted-foreground mt-1">Berdasarkan beban tugas aktif</p>
                     </CardHeader>
-                    <CardContent className="pt-6 space-y-5">
+                    <CardContent className="pt-6 space-y-5 overflow-y-auto max-h-[300px] pr-2">
                     {resourceWorkload.length === 0 ? (
                         <div className="text-center text-sm text-muted-foreground py-4">Semua tugas selesai.</div>
                     ) : (

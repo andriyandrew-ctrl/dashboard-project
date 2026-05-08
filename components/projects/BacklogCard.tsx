@@ -19,21 +19,21 @@ export function BacklogCard({ backlog }: BacklogCardProps) {
 
       <div className="space-y-4">
         {/* Divisi / Group */}
-        <div className="flex items-center justify-between text-sm">
-          <span className="flex items-center gap-2 text-muted-foreground">
+        <div className="flex items-start justify-between text-sm gap-4">
+          <span className="flex items-center gap-2 text-muted-foreground shrink-0 mt-0.5">
             <Hash className="h-4 w-4" />
             Divisi
           </span>
-          <span className="font-semibold text-foreground">Market Dev. Prod. Downstream Dept.</span>
+          <span className="font-semibold text-foreground text-right leading-tight">Market Dev. Prod. Downstream Dept.</span>
         </div>
 
         {/* Prioritas */}
-        <div className="flex items-center justify-between text-sm">
-          <span className="flex items-center gap-2 text-muted-foreground">
+        <div className="flex items-start justify-between text-sm gap-4">
+          <span className="flex items-center gap-2 text-muted-foreground shrink-0 mt-0.5">
             <Tag className="h-4 w-4" />
             Prioritas
           </span>
-          <span className="font-semibold text-foreground">{backlog.priorityLabel}</span>
+          <span className="font-semibold text-foreground text-right leading-tight">{backlog.priorityLabel}</span>
         </div>
 
 

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { format, isBefore, startOfDay } from "date-fns"
 import {
   CalendarBlank, ChartBar, CheckCircle, WarningOctagon, Target, Users, Warning, Info, 
-  TrendUp, TrendDown, Minus, WarningCircle, ClockAfternoon, Checks, ProjectorScreenChart, Spinner
+  TrendUp, TrendDown, Minus, WarningCircle, ClockAfternoon, Checks, ProjectorScreenChart, Spinner, Coins
 } from "@phosphor-icons/react/dist/ssr"
 
 import { SidebarTrigger } from "@/components/ui/sidebar"
@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { cn, formatTargetProduksi } from "@/lib/utils"
+import { cn, formatTargetProduksi, formatTargetRevenue } from "@/lib/utils"
 
 // IMPORT DATABASE PIPELINE (Gantikan data dummy)
 import { getAllProjects, getProjectById } from "@/lib/data/project-actions"
@@ -210,7 +210,7 @@ export function PerformanceContent() {
     let atRiskCount = 0
     let overdueTasksCount = 0
     let completedTasksCount = 0
-    let totalTargetProduksi = scopedProjects[0]?.targets?.targetProduksi || "N/A"
+    let totalRevenue = 0
     
     const allNotes: (ProjectNote & { projectName: string })[] = []
     const resourceMap = new Map<string, { count: number, avatar?: string }>()
@@ -219,15 +219,23 @@ export function PerformanceContent() {
     scopedProjects.forEach(p => {
         totalProgress += p.time.progressPercent
         if (p.time.progressPercent >= 30) { onTrackCount++ } else { atRiskCount++ }
+        
+        // Accumulate revenue
+        const rev = typeof p.dbData?.target_revenue === 'string' ? parseFloat(p.dbData.target_revenue.replace(/[^0-9.-]+/g,"")) : (p.dbData?.target_revenue || 0);
+        totalRevenue += rev;
+
         p.notes.forEach((n: any) => { allNotes.push({ ...n, projectName: p.name }) })
+
+        const projectPIC = p.dbData?.pic_name && p.dbData.pic_name.toLowerCase() !== "unassigned" ? p.dbData.pic_name : null;
 
         p.workstreams.forEach((ws: any) => {
             ws.tasks.forEach((t: any) => {
                 if (t.status === "done") { completedTasksCount++ } 
                 else if (t.endDate && isBefore(startOfDay(new Date(t.endDate)), todayStart)) { overdueTasksCount++ }
-                if (t.status !== "done" && t.assignee) {
-                    const existing = resourceMap.get(t.assignee.name) || { count: 0, avatar: t.assignee.avatarUrl }
-                    resourceMap.set(t.assignee.name, { count: existing.count + 1, avatar: t.assignee.avatarUrl })
+                
+                if (t.status !== "done" && projectPIC) {
+                    const existing = resourceMap.get(projectPIC) || { count: 0, avatar: "" }
+                    resourceMap.set(projectPIC, { count: existing.count + 1, avatar: "" })
                 }
             })
         })
@@ -308,7 +316,7 @@ export function PerformanceContent() {
             isFavorable: issuesTrend <= 0 
         } 
       },
-      { title: "Output Capacity", value: formatTargetProduksi(totalTargetProduksi), description: "Estimated target delivery", tooltip: "Target komitmen kapasitas produksi.", icon: <Target className="h-5 w-5" weight="fill" />, tone: "neutral", trend: { value: "0%", label: "capacity stable", direction: "neutral", isFavorable: true } },
+      { title: "Total Revenue", value: formatTargetRevenue(totalRevenue), description: "Total potensi pendapatan proyek", tooltip: "Total akumulasi target revenue dari seluruh proyek aktif.", icon: <Coins className="h-5 w-5" weight="fill" />, tone: "neutral", trend: { value: "0%", label: "revenue stable", direction: "neutral", isFavorable: true } },
     ] as const
 
     const operationalKpis = [
